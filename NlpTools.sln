@@ -12,6 +12,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NlpTools.Sample", "NlpTools
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NlpTools", "NlpTools\NlpTools.fsproj", "{741A6A74-2DEE-4BE3-B1F3-53F14C9C9BBD}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NlpTools.Tests", "NlpTools.Tests\NlpTools.Tests.fsproj", "{616DCA1D-2409-4FC3-A339-9D3C5A5F10A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,10 @@ Global
 		{741A6A74-2DEE-4BE3-B1F3-53F14C9C9BBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{741A6A74-2DEE-4BE3-B1F3-53F14C9C9BBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{741A6A74-2DEE-4BE3-B1F3-53F14C9C9BBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{616DCA1D-2409-4FC3-A339-9D3C5A5F10A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{616DCA1D-2409-4FC3-A339-9D3C5A5F10A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{616DCA1D-2409-4FC3-A339-9D3C5A5F10A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{616DCA1D-2409-4FC3-A339-9D3C5A5F10A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -71,7 +71,7 @@ module CoNLLU =
           Miscellaneous = ""; }
 
     let parseSentence (sentence: string) = 
-        let parts = sentence.Split [|'\r' ; '\n'|]
+        let parts = sentence.Split ([|'\r' ; '\n'|], StringSplitOptions.TrimEntries)
         let mutable words = []
         let comments = Dictionary<string, string>()
         for p in parts do
