@@ -12,6 +12,7 @@ let sample = """
 
 let parsed = parseSentence sample
 printSentence parsed
+printfn ""
 
 let sample2 = """
 1    Då      då     ADV      AB                    _
@@ -24,15 +25,22 @@ let sample2 = """
 
 let parsed2 = parseSentence sample2
 printSentence parsed2
+printfn ""
 
 let sample3 = """
-1    They     they    PRON    PRP    Case=Nom|Number=Plur               2    nsubj    2:nsubj|4:nsubj
-2    buy      buy     VERB    VBP    Number=Plur|Person=3|Tense=Pres    0    root     0:root
-3    and      and     CCONJ   CC     _                                  4    cc       4:cc
-4    sell     sell    VERB    VBP    Number=Plur|Person=3|Tense=Pres    2    conj     0:root|2:conj
-5    books    book    NOUN    NNS    Number=Plur                        2    obj      2:obj|4:obj
-6    .        .       PUNCT   .      _                                  2    punct    2:punct
+    # newdoc id = mf920901-001
+    # newpar id = mf920901-001-p1
+    # sent_id = mf920901-001-p1s1A
+    # text = Slovenská ústava: pro i proti
+    # text_en = Slovak constitution: pros and cons
+    1   Slovenská   slovenský   ADJ     AAFS1----1A---- Case=Nom|Degree=Pos|Gender=Fem|Number=Sing|Polarity=Pos 2 amod _ _
+    2   ústava      ústava      NOUN    NNFS1-----A---- Case=Nom|Gender=Fem|Number=Sing|Polarity=Pos 0 root _ SpaceAfter=No
+    3   :           :           PUNCT   Z:------------- _          2       punct   _       _
+    4   pro         pro         ADP     RR--4---------- Case=Acc   2       appos   _       LId=pro-1
+    5   i           i           CCONJ   J^------------- _          6       cc      _       LId=i-1
+    6   proti       proti       ADP     RR--3---------- Case=Dat   4       conj    _       LId=proti-1
     """
 
 let parsed3 = parseSentence sample3
 printSentence parsed3
+printfn ""

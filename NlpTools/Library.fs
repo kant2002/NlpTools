@@ -52,19 +52,19 @@ module CoNLLU =
         { ID: WordId
           Form: string;
           Lemma: string option;
-          UniversalPartOfSpeech: PartOfSpeech;
-          LanguageSpecificPartOfSpeech: string;
+          UniversalPartOfSpeech: PartOfSpeech option;
+          LanguageSpecificPartOfSpeech: string option;
           Features: Dictionary<string, string>; 
-          Head: int8;
-          DependencyRelation: string;
-          Dependencies: string;
-          Miscellaneous: string; }
+          Head: int8 option;
+          DependencyRelation: string option;
+          Dependencies: string option;
+          Miscellaneous: Dictionary<string, string>; }
 
     type Sentence =
         { Words: Word list;
           Comments: Dictionary<string, string>; }
 
-    let private parseFeatures (features:string) =
+    let private parseDictionary (features:string) =
         let featuresArray = features.Split [| '|' |]
         let result = Dictionary<string, string>()
         if features <> "_" && features <> "" then
@@ -74,12 +74,12 @@ module CoNLLU =
 
         result
 
-    let printFeatures (features: Dictionary<string, string>) =
+    let printDictionary (features: Dictionary<string, string>) =
         let x = features.Select(fun x -> $"{x.Key}={x.Value}")
         String.concat "|" x
 
     let private parseWord (word:string) =
-        let parts = word.Split ([|' '|], StringSplitOptions.RemoveEmptyEntries)
+        let parts = word.Split ([|' ' ; '\t'|], StringSplitOptions.RemoveEmptyEntries)
         let wordIdString = parts[0]
         let wordId = match wordIdString.Split [| '-' |] with
                         | [| head ; tail |] -> Range (head |> int, tail |> int)
@@ -92,36 +92,51 @@ module CoNLLU =
             | "_" -> None
             | _ -> Some(value)
 
-        let upos = match defaultArg (Array.tryItem 3 parts) "X" with
-                    | "ADJ" -> Adjective
-                    | "ADP" -> Adposition
-                    | "ADV" -> Adverb
-                    | "AUX" -> Auxiliary
-                    | "CCONJ" -> CoordinatingConjunction
-                    | "DET" -> Determiner
-                    | "INTJ" -> Interjection
-                    | "NOUN" -> Noun
-                    | "NUM" -> Numeral
-                    | "PART" -> Particle
-                    | "PRON" -> Pronoun
-                    | "PROPN" -> ProperNoun
-                    | "PUNCT" -> Punctuation
-                    | "SCONJ" -> SubordinatingConjunction
-                    | "SYM" -> Symbol
-                    | "VERB" -> Verb
-                    | "X" -> Other
-                    | _ -> failwith $"Unknown universal part of speech %s{parts[3]}"
-
+        let upos = 
+            match Array.tryItem 3 parts with
+                | Some pos ->
+                    let posType =
+                        match pos with
+                        | "ADJ"   -> Some(Adjective)
+                        | "ADP"   -> Some(Adposition)
+                        | "ADV"   -> Some(Adverb)
+                        | "AUX"   -> Some(Auxiliary)
+                        | "CCONJ" -> Some(CoordinatingConjunction)
+                        | "DET"   -> Some(Determiner)
+                        | "INTJ"  -> Some(Interjection)
+                        | "NOUN"  -> Some(Noun)
+                        | "NUM"   -> Some(Numeral)
+                        | "PART"  -> Some(Particle)
+                        | "PRON"  -> Some(Pronoun)
+                        | "PROPN" -> Some(ProperNoun)
+                        | "PUNCT" -> Some(Punctuation)
+                        | "SCONJ" -> Some(SubordinatingConjunction)
+                        | "SYM"   -> Some(Symbol)
+                        | "VERB"  -> Some(Verb)
+                        | "X"     -> Some(Other)
+                        | "_"     -> None
+                        | _ -> failwith $"Unknown universal part of speech %s{parts[3]}"
+                    posType
+                | None -> None
+        let head =
+            match defaultArg (Array.tryItem 6 parts) "0" with
+            | "_" -> None
+            | head -> Some(head |> sbyte)
+        let parseString v =
+            match v with
+            | Some v when v = "_" -> None
+            | None -> None
+            | _ -> v
         { ID = wordId
           Form = parts[1]
           Lemma = parseOptionalString parts[2]
           UniversalPartOfSpeech = upos;
-          LanguageSpecificPartOfSpeech = defaultArg (Array.tryItem 4 parts) "";
-          Features = parseFeatures (defaultArg (Array.tryItem 5 parts) "");
-          Head = (defaultArg (Array.tryItem 6 parts) "0") |> sbyte;
-          DependencyRelation = defaultArg (Array.tryItem 7 parts) "";
-          Dependencies = defaultArg (Array.tryItem 8 parts) "";
-          Miscellaneous = defaultArg (Array.tryItem 9 parts) ""; }
+          LanguageSpecificPartOfSpeech = parseString (Array.tryItem 4 parts);
+          Features = parseDictionary (defaultArg (Array.tryItem 5 parts) "");
+          Head = head;
+          DependencyRelation = parseString (Array.tryItem 7 parts);
+          Dependencies = parseString (Array.tryItem 8 parts);
+          Miscellaneous = parseDictionary (defaultArg (Array.tryItem 9 parts) ""); }
 
     let parseSentence (sentence: string) = 
         let parts = sentence.Split ([|'\r' ; '\n'|], StringSplitOptions.TrimEntries)
@@ -143,38 +158,46 @@ module CoNLLU =
                         | Position pos -> pos |> string
                         | NullPosition (start,finish) -> sprintf "%d.%d" start finish
 
-        let upos = match word.UniversalPartOfSpeech with
-                    | Adjective -> "ADJ"
-                    | Adposition -> "ADP"
-                    | Adverb -> "ADV"
-                    | Auxiliary -> "AUX"
-                    | CoordinatingConjunction -> "CCONJ"
-                    | Determiner -> "DET"
-                    | Interjection -> "INTJ"
-                    | Noun -> "NOUN"
-                    | Numeral -> "NUM"
-                    | Particle -> "PART"
-                    | Pronoun ->"PRON"
-                    | ProperNoun -> "PROPN"
-                    | Punctuation ->"PUNCT"
-                    | SubordinatingConjunction -> "SCONJ"
-                    | Symbol -> "SYM"
-                    | Verb -> "VERB"
-                    | Other -> "X"
+        let upos = 
+            match word.UniversalPartOfSpeech with
+            | Some upos ->
+                match upos with
+                | Adjective -> "ADJ"
+                | Adposition -> "ADP"
+                | Adverb -> "ADV"
+                | Auxiliary -> "AUX"
+                | CoordinatingConjunction -> "CCONJ"
+                | Determiner -> "DET"
+                | Interjection -> "INTJ"
+                | Noun -> "NOUN"
+                | Numeral -> "NUM"
+                | Particle -> "PART"
+                | Pronoun ->"PRON"
+                | ProperNoun -> "PROPN"
+                | Punctuation ->"PUNCT"
+                | SubordinatingConjunction -> "SCONJ"
+                | Symbol -> "SYM"
+                | Verb -> "VERB"
+                | Other -> "X"
+            | None -> ""
 
+        let head =
+            match word.Head with
+            | Some head -> head |> string
+            | None -> "_"
         printf "%-7s" wordId
         printf "%-10s" word.Form
         printf "%-10s" (defaultArg word.Lemma "_")
         printf "%-10s" upos
-        printf "%-20s" word.LanguageSpecificPartOfSpeech
+        printf "%-20s" (defaultArg word.LanguageSpecificPartOfSpeech "_")
         printf " "
-        printf "%-50s" (printFeatures word.Features)
+        printf "%-50s" (printDictionary word.Features)
         printf " "
-        printf "%-6d" word.Head
-        printf "%-6s" word.DependencyRelation
-        printf "%-20s" word.Dependencies
+        printf "%-6s" head
+        printf "%-6s" (defaultArg word.DependencyRelation "_")
+        printf "%-20s" (defaultArg word.Dependencies "_")
         printf " "
-        printf "%s" word.Miscellaneous
+        printf "%s" (printDictionary word.Miscellaneous)
         printfn ""
 
     let printSentence sentence =

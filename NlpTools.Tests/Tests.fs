@@ -66,14 +66,14 @@ let ``Morphological Annotation`` () =
     Assert.Equal(Position 1, parsed.Words[0].ID)
     Assert.Equal("Då", parsed.Words[0].Form)
     Assert.Equal(Some("då"), parsed.Words[0].Lemma)
-    Assert.Equal(Adverb, parsed.Words[0].UniversalPartOfSpeech)
-    Assert.Equal("AB", parsed.Words[0].LanguageSpecificPartOfSpeech)
+    Assert.Equal(Some(Adverb), parsed.Words[0].UniversalPartOfSpeech)
+    Assert.Equal(Some("AB"), parsed.Words[0].LanguageSpecificPartOfSpeech)
     Assert.Empty(parsed.Words[0].Features)
     Assert.Equal(Position 2, parsed.Words[1].ID)
     Assert.Equal("var", parsed.Words[1].Form)
     Assert.Equal(Some("vara"), parsed.Words[1].Lemma)
-    Assert.Equal(Verb, parsed.Words[1].UniversalPartOfSpeech)
-    Assert.Equal("VB.PRET.ACT", parsed.Words[1].LanguageSpecificPartOfSpeech)
+    Assert.Equal(Some(Verb), parsed.Words[1].UniversalPartOfSpeech)
+    Assert.Equal(Some("VB.PRET.ACT"), parsed.Words[1].LanguageSpecificPartOfSpeech)
     //Assert.NonEmpty(parsed.Words[1].Features)
     Assert.Equal(2, parsed.Words[1].Features.Count)
     Assert.Equal("Past", parsed.Words[1].Features["Tense"])
@@ -96,14 +96,49 @@ let ``Syntactic Annotation`` () =
     Assert.Equal(Position 1, parsed.Words[0].ID)
     Assert.Equal("They", parsed.Words[0].Form)
     Assert.Equal(Some("they"), parsed.Words[0].Lemma)
-    Assert.Equal(Pronoun, parsed.Words[0].UniversalPartOfSpeech)
-    Assert.Equal("PRP", parsed.Words[0].LanguageSpecificPartOfSpeech)
+    Assert.Equal(Some(Pronoun), parsed.Words[0].UniversalPartOfSpeech)
+    Assert.Equal(Some("PRP"), parsed.Words[0].LanguageSpecificPartOfSpeech)
     Assert.Equal(2, parsed.Words[0].Features.Count)
     Assert.Equal("Nom", parsed.Words[0].Features["Case"])
     Assert.Equal("Plur", parsed.Words[0].Features["Number"])
-    Assert.Equal(2y, parsed.Words[0].Head)
-    Assert.Equal("nsubj", parsed.Words[0].DependencyRelation)
-    Assert.Equal("2:nsubj|4:nsubj", parsed.Words[0].Dependencies)
+    Assert.Equal(Some(2y), parsed.Words[0].Head)
+    Assert.Equal(Some("nsubj"), parsed.Words[0].DependencyRelation)
+    Assert.Equal(Some("2:nsubj|4:nsubj"), parsed.Words[0].Dependencies)
+
+[<Fact>]
+let ``UPOS can be missing`` () =
+    let sample = """
+    1-2   He's      _         _       _       _                                 _   _       _   _
+    """
+
+    let parsed = parseSentence sample
+    Assert.Empty(parsed.Comments)
+    Assert.Equal(1, parsed.Words.Length)
+    Assert.Equal("He's", parsed.Words[0].Form)
+    Assert.Equal(None, parsed.Words[0].Lemma)
+    Assert.Equal(None, parsed.Words[0].UniversalPartOfSpeech)
+    Assert.Equal(None, parsed.Words[0].LanguageSpecificPartOfSpeech)
+    Assert.Empty(parsed.Words[0].Features)
+    Assert.Equal(None, parsed.Words[0].Head)
+    Assert.Equal(None, parsed.Words[0].DependencyRelation)
+    Assert.Equal(None, parsed.Words[0].Dependencies)
+
+[<Fact>]
+let ``Parse miscellaneous`` () =
+    let sample = """
+    1   Slovenská   slovenský   ADJ     AAFS1----1A---- Case=Nom|Degree=Pos|Gender=Fem|Number=Sing|Polarity=Pos 2 amod _ _
+    2   ústava      ústava      NOUN    NNFS1-----A---- Case=Nom|Gender=Fem|Number=Sing|Polarity=Pos 0 root _ SpaceAfter=No
+    3   :           :           PUNCT   Z:------------- _          2       punct   _       _
+    4   pro         pro         ADP     RR--4---------- Case=Acc   2       appos   _       LId=pro-1
+    5   i           i           CCONJ   J^------------- _          6       cc      _       LId=i-1
+    6   proti       proti       ADP     RR--3---------- Case=Dat   4       conj    _       LId=proti-1
+    """
+
+    let parsed = parseSentence sample
+    Assert.Empty(parsed.Comments)
+    Assert.Equal(6, parsed.Words.Length)
+    Assert.Equal(1, parsed.Words[1].Miscellaneous.Count)
+    Assert.Equal("No", parsed.Words[1].Miscellaneous["SpaceAfter"])
 
 [<Fact>]
 let ``Reconstruct sentence`` () =
