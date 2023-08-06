@@ -13,4 +13,14 @@ let sample = """
 let parsed = parseSentence sample
 printSentence parsed
 
-printfn "%s" sample
+let sample2 = """
+1    Då      då     ADV      AB                    _
+2    var     vara   VERB     VB.PRET.ACT           Tense=Past|Voice=Act
+3    han     han    PRON     PN.UTR.SIN.DEF.NOM    Case=Nom|Definite=Def|Gender=Com|Number=Sing
+4    elva    elva   NUM      RG.NOM                Case=Nom|NumType=Card
+5    år      år     NOUN     NN.NEU.PLU.IND.NOM    Case=Nom|Definite=Ind|Gender=Neut|Number=Plur
+6    .       .      PUNCT    DL.MAD                _
+    """
+
+let parsed2 = parseSentence sample2
+printSentence parsed2
