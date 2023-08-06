@@ -80,6 +80,32 @@ let ``Morphological Annotation`` () =
     Assert.Equal("Act", parsed.Words[1].Features["Voice"])
 
 [<Fact>]
+let ``Syntactic Annotation`` () =
+    let sample = """
+1    They     they    PRON    PRP    Case=Nom|Number=Plur               2    nsubj    2:nsubj|4:nsubj
+2    buy      buy     VERB    VBP    Number=Plur|Person=3|Tense=Pres    0    root     0:root
+3    and      and     CCONJ   CC     _                                  4    cc       4:cc
+4    sell     sell    VERB    VBP    Number=Plur|Person=3|Tense=Pres    2    conj     0:root|2:conj
+5    books    book    NOUN    NNS    Number=Plur                        2    obj      2:obj|4:obj
+6    .        .       PUNCT   .      _                                  2    punct    2:punct
+    """
+
+    let parsed = parseSentence sample
+    Assert.Empty(parsed.Comments)
+    Assert.Equal(6, parsed.Words.Length)
+    Assert.Equal(Position 1, parsed.Words[0].ID)
+    Assert.Equal("They", parsed.Words[0].Form)
+    Assert.Equal(Some("they"), parsed.Words[0].Lemma)
+    Assert.Equal(Pronoun, parsed.Words[0].UniversalPartOfSpeech)
+    Assert.Equal("PRP", parsed.Words[0].LanguageSpecificPartOfSpeech)
+    Assert.Equal(2, parsed.Words[0].Features.Count)
+    Assert.Equal("Nom", parsed.Words[0].Features["Case"])
+    Assert.Equal("Plur", parsed.Words[0].Features["Number"])
+    Assert.Equal(2y, parsed.Words[0].Head)
+    Assert.Equal("nsubj", parsed.Words[0].DependencyRelation)
+    Assert.Equal("2:nsubj|4:nsubj", parsed.Words[0].Dependencies)
+
+[<Fact>]
 let ``Reconstruct sentence`` () =
     let sample = """
     1-2    vámonos   _

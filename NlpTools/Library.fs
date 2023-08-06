@@ -118,10 +118,10 @@ module CoNLLU =
           UniversalPartOfSpeech = upos;
           LanguageSpecificPartOfSpeech = defaultArg (Array.tryItem 4 parts) "";
           Features = parseFeatures (defaultArg (Array.tryItem 5 parts) "");
-          Head = 0y;
-          DependencyRelation = "";
-          Dependencies = "";
-          Miscellaneous = ""; }
+          Head = (defaultArg (Array.tryItem 6 parts) "0") |> sbyte;
+          DependencyRelation = defaultArg (Array.tryItem 7 parts) "";
+          Dependencies = defaultArg (Array.tryItem 8 parts) "";
+          Miscellaneous = defaultArg (Array.tryItem 9 parts) ""; }
 
     let parseSentence (sentence: string) = 
         let parts = sentence.Split ([|'\r' ; '\n'|], StringSplitOptions.TrimEntries)
@@ -167,7 +167,14 @@ module CoNLLU =
         printf "%-10s" (defaultArg word.Lemma "_")
         printf "%-10s" upos
         printf "%-20s" word.LanguageSpecificPartOfSpeech
-        printf "%-20s" (printFeatures word.Features)
+        printf " "
+        printf "%-50s" (printFeatures word.Features)
+        printf " "
+        printf "%-6d" word.Head
+        printf "%-6s" word.DependencyRelation
+        printf "%-20s" word.Dependencies
+        printf " "
+        printf "%s" word.Miscellaneous
         printfn ""
 
     let printSentence sentence =
