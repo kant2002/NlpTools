@@ -158,6 +158,10 @@ module CoNLLU =
                 ()
         { Words = words; Comments = comments }
 
+    let parseBlock (block: string) =
+        let blocks = block.Split "\r\n\r\n"
+        blocks |> Seq.filter (fun x -> x <> "") |> Seq.map parseSentence |> Seq.toList
+
     let printWord word =
         let wordId = match word.ID with
                         | Range (start,finish) -> sprintf "%d-%d" start finish

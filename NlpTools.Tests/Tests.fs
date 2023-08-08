@@ -165,6 +165,45 @@ let ``Parse comments`` () =
     Assert.Equal("Slovak constitution: pros and cons", parsed.Comments["text_en"])
 
 [<Fact>]
+let ``Parse file`` () =
+    let sample = """
+# author = Багряний Іван
+# doc_title = Сад Гетсиманський
+# newdoc id = 028g
+# newpar id = 02tb
+# sent_id = 02to
+# text = Дідусь, той що атестував, посміхнувся й спитав:
+# translit = Diduś, toj ščo atestuvav, posmichnuvśа j spytav:
+1	Дідусь	дідусь	NOUN	Ncmsny	Animacy=Anim|Case=Nom|Gender=Masc|Number=Sing	7	nsubj	7:nsubj|9:nsubj	Id=02tp|LTranslit=diduś|SpaceAfter=No|Translit=Diduś
+2	,	,	PUNCT	U	_	3	punct	3:punct	Id=02tq|LTranslit=,|Translit=,
+3	той	той	DET	Pd--m-sna	Case=Nom|Gender=Masc|Number=Sing|PronType=Dem	7	dislocated	5:nsubj|7:dislocated|9:dislocated	Id=02tr|LTranslit=toj|Translit=toj
+4	що	що	SCONJ	Css	_	5	mark	5:mark	Id=02ts|LTranslit=ščo|Translit=ščo
+5	атестував	атестувати	VERB	Vmpis-sm	Aspect=Imp|Gender=Masc|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin	3	acl:relcl	3:acl:relcl	Id=02tt|LTranslit=atestuvaty|SpaceAfter=No|Translit=atestuvav
+6	,	,	PUNCT	U	_	5	punct	5:punct	Id=02tu|LTranslit=,|Translit=,
+7	посміхнувся	посміхнутися	VERB	Vmeis-sm	Aspect=Perf|Gender=Masc|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin	0	root	0:root	Id=02tv|LTranslit=posmichnutyśа|Translit=posmichnuvśа
+8	й	й	CCONJ	Ccs	_	9	cc	9:cc	Id=02tw|LTranslit=j|Translit=j
+9	спитав	спитати	VERB	Vmeis-sm	Aspect=Perf|Gender=Masc|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin	7	conj	0:root|7:conj	Id=02tx|LTranslit=spytaty|SpaceAfter=No|Translit=spytav
+10	:	:	PUNCT	U	_	7	punct	7:punct	Id=02ty|LTranslit=:|Translit=:
+
+# newpar id = 02tz
+# sent_id = 2emh
+# text = — Ви перед цим сиділи в тюрмі?
+# translit = — Vy pered cym sydily v ťurmi?
+1	—	—	PUNCT	U	PunctType=Dash	5	punct	5:punct	Id=02u0|LTranslit=—|Translit=—
+2	Ви	ви	PRON	Pp-2-ypnn	Animacy=Anim|Case=Nom|Number=Plur|Person=2|PronType=Prs	5	nsubj	5:nsubj	Id=02u1|LTranslit=vy|Translit=Vy
+3	перед	перед	ADP	Spsi	Case=Ins	4	case	4:case	Id=02u2|LTranslit=pered|Translit=pered
+4	цим	це	PRON	Pd--nnsin	Animacy=Inan|Case=Ins|Gender=Neut|Number=Sing|PronType=Dem	5	obl	5:obl	Id=02u3|LTranslit=ce|Translit=cym
+5	сиділи	сидіти	VERB	Vmpis-p	Aspect=Imp|Mood=Ind|Number=Plur|Tense=Past|VerbForm=Fin	0	root	0:root	Id=02u4|LTranslit=sydity|Translit=sydily
+6	в	в	ADP	Spsl	Case=Loc	7	case	7:case	Id=02u5|LTranslit=v|Translit=v
+7	тюрмі	тюрма	NOUN	Ncfsln	Animacy=Inan|Case=Loc|Gender=Fem|Number=Sing	5	obl	5:obl	Id=02u6|LTranslit=ťurma|SpaceAfter=No|Translit=ťurmi
+8	?	?	PUNCT	U	_	5	punct	5:punct	Id=02u7|LTranslit=?|Translit=?
+
+"""
+
+    let parsed = parseBlock sample
+    Assert.Equal(2, parsed.Length)
+
+[<Fact>]
 let ``Reconstruct sentence`` () =
     let sample = """
     1-2    vámonos   _
