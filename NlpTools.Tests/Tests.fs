@@ -101,7 +101,7 @@ let ``Syntactic Annotation`` () =
     Assert.Equal(2, parsed.Words[0].Features.Count)
     Assert.Equal("Nom", parsed.Words[0].Features["Case"])
     Assert.Equal("Plur", parsed.Words[0].Features["Number"])
-    Assert.Equal(Some(2y), parsed.Words[0].Head)
+    Assert.Equal(Some(2uy), parsed.Words[0].Head)
     Assert.Equal(Some("nsubj"), parsed.Words[0].DependencyRelation)
     Assert.Equal(Some("2:nsubj|4:nsubj"), parsed.Words[0].Dependencies)
 

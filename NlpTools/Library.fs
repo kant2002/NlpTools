@@ -55,7 +55,7 @@ module CoNLLU =
           UniversalPartOfSpeech: PartOfSpeech option;
           LanguageSpecificPartOfSpeech: string option;
           Features: Dictionary<string, string>; 
-          Head: int8 option;
+          Head: uint8 option;
           DependencyRelation: string option;
           Dependencies: string option;
           Miscellaneous: Dictionary<string, string>; }
@@ -121,7 +121,7 @@ module CoNLLU =
         let head =
             match defaultArg (Array.tryItem 6 parts) "0" with
             | "_" -> None
-            | head -> Some(head |> sbyte)
+            | head -> Some(head |> byte)
         let parseString v =
             match v with
             | Some v when v = "_" -> None
