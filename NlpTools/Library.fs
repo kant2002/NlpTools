@@ -79,7 +79,12 @@ module CoNLLU =
         String.concat "|" x
 
     let private parseWord (word:string) =
-        let parts = word.Split ([|' ' ; '\t'|], StringSplitOptions.RemoveEmptyEntries)
+        let fixup (p: string array) =
+            match p.Length with
+            | 12 -> [| p[0]; p[1] + " " + p[2]; p[3]; p[4]; p[5]; p[6]; p[7]; p[8]; p[9]; p[10] + " " + p[11] |]
+            | 14 -> [| p[0]; p[1] + " " + p[2] + " " + p[3]; p[4]; p[5]; p[6]; p[7]; p[8]; p[9]; p[10]; p[11] + " " + p[12] + " " + p[13] |]
+            | _ -> p
+        let parts = word.Split ([|' ' ; '\t'|], StringSplitOptions.RemoveEmptyEntries) |> fixup
         let wordIdString = parts[0]
         let wordId = match wordIdString.Split [| '-' |] with
                         | [| head ; tail |] -> Range (head |> int, tail |> int)
@@ -159,7 +164,8 @@ module CoNLLU =
         { Words = words; Comments = comments }
 
     let parseBlock (block: string) =
-        let blocks = block.Split "\r\n\r\n"
+        //let blocks = block.Split "\r\n\r\n"
+        let blocks = block.Split "\n\n"
         blocks |> Seq.filter (fun x -> x <> "") |> Seq.map parseSentence |> Seq.toList
 
     let printWord word =

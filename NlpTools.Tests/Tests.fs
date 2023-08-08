@@ -106,6 +106,35 @@ let ``Syntactic Annotation`` () =
     Assert.Equal(Some("2:nsubj|4:nsubj"), parsed.Words[0].Dependencies)
 
 [<Fact>]
+let ``Numbers in form can have whitespaces`` () =
+    let sample = """
+# sent_id = 2m0p
+# text = У 1995-му Сінгапур із 26 000 дол. США на душу населення обійшов Британію (19 700).
+# translit = U 1995-mu Sinhapur iz 26 000 dol. SŠA na dušu naselenńа obijšov Brytaniju (19 700).
+1	У	у	ADP	Spsl	Case=Loc	2	case	2:case	Id=2m0q|LTranslit=u|Translit=U
+2	1995-му	1995-ий	NOUN	Ao-mslf	Animacy=Inan|Case=Loc|Gender=Masc|Number=Sing	12	obl	12:obl	Id=2m0r|LTranslit=1995-yj|Translit=1995-mu
+3	Сінгапур	Сінгапур	PROPN	Npmsnn	Animacy=Inan|Case=Nom|Gender=Masc|Number=Sing	12	nsubj	12:nsubj	Id=2m0s|LTranslit=Sinhapur|Translit=Sinhapur
+4	із	із	ADP	Spsi	Case=Ins	6	case	6:case	Id=2m0t|LTranslit=iz|Translit=iz
+5	26 000	26000	NUM	Mlc-i	Case=Ins|NumType=Card|Uninflect=Yes	6	nummod	6:nummod	Id=2m0v|LTranslit=26000|Translit=26 000
+6	дол	дол.	NOUN	Y	Abbr=Yes|Animacy=Inan|Case=Ins|Gender=Masc|Number=Plur|Uninflect=Yes	3	nmod	3:nmod	Id=2m0w|LTranslit=dol.|SpaceAfter=No|Translit=dol
+7	.	.	PUNCT	U	_	6	punct	6:punct	Id=2m0x|LTranslit=.|Translit=.
+8	США	США	PROPN	Np-pgn	Animacy=Inan|Case=Gen|Number=Ptan|Uninflect=Yes	6	nmod	6:nmod	Id=2m0y|LTranslit=SŠA|Translit=SŠA
+9	на	на	ADP	Spsa	Case=Acc	10	case	10:case	Id=2m0z|LTranslit=na|Translit=na
+10	душу	душа	NOUN	Ncfsan	Animacy=Inan|Case=Acc|Gender=Fem|Number=Sing	6	nmod	6:nmod	Id=2m10|LTranslit=duša|Translit=dušu
+11	населення	населення	NOUN	Ncnsgn	Animacy=Inan|Case=Gen|Gender=Neut|Number=Sing	10	nmod	10:nmod	Id=2m11|LTranslit=naselenńа|Translit=naselenńа
+12	обійшов	обійти	VERB	Vmeis-sm	Aspect=Perf|Gender=Masc|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin	0	root	0:root	Id=2m12|LTranslit=obijty|Translit=obijšov
+13	Британію	Британія	PROPN	Npfsan	Animacy=Inan|Case=Acc|Gender=Fem|Number=Sing	12	obj	12:obj	Id=2m13|LTranslit=Brytanija|Translit=Brytaniju
+14	(	(	PUNCT	U	_	15	punct	15:punct	Id=2m14|LTranslit=(|SpaceAfter=No|Translit=(
+15	19 700	19700	NUM	Mlc-n	Case=Nom|NumType=Card|Uninflect=Yes	13	parataxis	13:parataxis	Id=2m16|LTranslit=19700|SpaceAfter=No|Translit=19 700
+16	)	)	PUNCT	U	_	15	punct	15:punct	Id=2m17|LTranslit=)|SpaceAfter=No|Translit=)
+17	.	.	PUNCT	U	_	12	punct	12:punct	Id=2m18|LTranslit=.|Translit=.
+    """
+
+    let parsed = parseSentence sample
+    Assert.Equal(3, parsed.Comments.Count)
+    Assert.Equal(17, parsed.Words.Length)
+
+[<Fact>]
 let ``UPOS can be missing`` () =
     let sample = """
     1-2   He's      _         _       _       _                                 _   _       _   _
