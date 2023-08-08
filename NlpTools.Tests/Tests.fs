@@ -141,6 +141,30 @@ let ``Parse miscellaneous`` () =
     Assert.Equal("No", parsed.Words[1].Miscellaneous["SpaceAfter"])
 
 [<Fact>]
+let ``Parse comments`` () =
+    let sample = """
+    # newdoc id = mf920901-001
+    # newpar id = mf920901-001-p1
+    # sent_id = mf920901-001-p1s1A
+    # text = Slovenská ústava: pro i proti
+    # text_en = Slovak constitution: pros and cons
+    1   Slovenská   slovenský   ADJ     AAFS1----1A---- Case=Nom|Degree=Pos|Gender=Fem|Number=Sing|Polarity=Pos 2 amod _ _
+    2   ústava      ústava      NOUN    NNFS1-----A---- Case=Nom|Gender=Fem|Number=Sing|Polarity=Pos 0 root _ SpaceAfter=No
+    3   :           :           PUNCT   Z:------------- _          2       punct   _       _
+    4   pro         pro         ADP     RR--4---------- Case=Acc   2       appos   _       LId=pro-1
+    5   i           i           CCONJ   J^------------- _          6       cc      _       LId=i-1
+    6   proti       proti       ADP     RR--3---------- Case=Dat   4       conj    _       LId=proti-1
+    """
+
+    let parsed = parseSentence sample
+    Assert.Equal(5, parsed.Comments.Count)
+    Assert.Equal("mf920901-001", parsed.Comments["newdoc id"])
+    Assert.Equal("mf920901-001-p1", parsed.Comments["newpar id"])
+    Assert.Equal("mf920901-001-p1s1A", parsed.Comments["sent_id"])
+    Assert.Equal("Slovenská ústava: pro i proti", parsed.Comments["text"])
+    Assert.Equal("Slovak constitution: pros and cons", parsed.Comments["text_en"])
+
+[<Fact>]
 let ``Reconstruct sentence`` () =
     let sample = """
     1-2    vámonos   _

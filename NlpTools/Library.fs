@@ -145,12 +145,18 @@ module CoNLLU =
         for p in parts do
             match p with
             | "" -> ()
-            | line when line.StartsWith('#') -> comments.Add(line.Substring(1), "")
+            | line when line.StartsWith('#') ->
+                let comment = line.Substring(1)
+                let p = comment.Split ([| '=' |], 2, StringSplitOptions.TrimEntries)
+                if p.Length = 1 then
+                    comments.Add(comment, "")
+                else
+                    comments.Add(p[0], p[1])
             | _ -> 
                 let word = parseWord p
                 words <- words @ [word]
                 ()
-        { Words = words; Comments = Dictionary<string, string>() }
+        { Words = words; Comments = comments }
 
     let printWord word =
         let wordId = match word.ID with
