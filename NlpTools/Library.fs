@@ -164,7 +164,7 @@ module CoNLLU =
         { Words = words; Comments = comments }
 
     let parseBlock (block: string) =
-        let blocks = block.Split "\r\n\r\n"
+        let blocks = block.ReplaceLineEndings("\r\n").Split "\r\n\r\n"
         //let blocks = block.Split "\n\n"
         blocks |> Seq.filter (fun x -> x <> "") |> Seq.map parseSentence |> Seq.toList
 

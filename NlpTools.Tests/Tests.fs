@@ -4,6 +4,9 @@ open System
 open Xunit
 open NlpTools.CoNLLU
 
+let replace (lineending: string) (str:string) =
+    str.ReplaceLineEndings(lineending)
+
 [<Fact>]
 let ``Minimal information`` () =
     let sample = """
@@ -229,7 +232,10 @@ let ``Parse file`` () =
 
 """
 
-    let parsed = parseBlock sample
+    let parsed = parseBlock (sample |> replace "\r\n")
+    Assert.Equal(2, parsed.Length)
+
+    let parsed = parseBlock (sample |> replace "\n")
     Assert.Equal(2, parsed.Length)
 
 [<Fact>]
