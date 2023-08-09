@@ -136,7 +136,8 @@ module CoNLLU =
         | None -> None
         | _ -> v
 
-    let private parseWordSimple (parts: string array) =
+    let private parseWord (word:string) =
+        let parts = word.Split ([| '\t' |], StringSplitOptions.RemoveEmptyEntries)
         let wordIdString = parts[0]
         let wordId = match wordIdString.Split [| '-' |] with
                         | [| head ; tail |] -> Range (head |> int, tail |> int)
@@ -160,43 +161,6 @@ module CoNLLU =
           DependencyRelation = parseString (Array.tryItem 7 parts);
           Dependencies = parseString (Array.tryItem 8 parts);
           Miscellaneous = parseDictionary (defaultArg (Array.tryItem 9 parts) ""); }
-
-    let private parseWord (word:string) =
-        let strContainsOnlyNumber (s:string) = System.Int32.TryParse s |> fst
-        let fixup (p: string array) =
-            match p with
-            | p when isUpos p[4] -> [| p[0]; p[1] + " " + p[2]; p[3]; p[4] (* upos *); p[5]; p[6]; p[7]; p[8]; p[9]; p[10] + " " + p[11] |]
-            | p when isUpos p[5] && strContainsOnlyNumber p[1] -> [| p[0]; p[1] + " " + p[2] + " " + p[3]; p[4]; p[5] (* upos *); p[6]; p[7]; p[8]; p[9]; p[10]; p[11] + " " + p[12] + " " + p[13] |]
-            | p when isUpos p[5] && not (strContainsOnlyNumber p[1]) -> [| p[0]; p[1] + " " + p[2]; p[3] + " " + p[4]; p[5] (* upos *); p[6]; p[7]; p[8]; p[9]; p[10]; p[11] |]
-            | _ -> p
-        let oparts = word.Split ([|' ' ; '\t'|], StringSplitOptions.RemoveEmptyEntries)
-        match oparts.Length with
-        | x when x <= 10 -> parseWordSimple oparts
-        | _ ->
-            let parts = oparts |> fixup
-            let wordIdString = parts[0]
-            let wordId = match wordIdString.Split [| '-' |] with
-                            | [| head ; tail |] -> Range (head |> int, tail |> int)
-                            | _ -> match wordIdString.Split [| '.' |] with
-                                            | [| head ; tail |] -> NullPosition (head |> int, tail |> int)
-                                            | [| head |] -> Position (head |> int)
-                                            | _ -> failwith $"Invalid word id '%s{wordIdString}'"
-
-            let upos = parseUpos (Array.tryItem 3 parts)
-            let head =
-                match defaultArg (Array.tryItem 6 parts) "0" with
-                | "_" -> None
-                | head -> Some(head |> byte)
-            { ID = wordId
-              Form = parts[1]
-              Lemma = parseOptionalString parts[2]
-              UniversalPartOfSpeech = upos;
-              LanguageSpecificPartOfSpeech = parseString (Array.tryItem 4 parts);
-              Features = parseDictionary (defaultArg (Array.tryItem 5 parts) "");
-              Head = head;
-              DependencyRelation = parseString (Array.tryItem 7 parts);
-              Dependencies = parseString (Array.tryItem 8 parts);
-              Miscellaneous = parseDictionary (defaultArg (Array.tryItem 9 parts) ""); }
 
     let parseSentence (sentence: string) = 
         let parts = sentence.Split ([|'\r' ; '\n'|], StringSplitOptions.TrimEntries)

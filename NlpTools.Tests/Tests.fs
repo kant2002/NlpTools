@@ -10,14 +10,14 @@ let replace (lineending: string) (str:string) =
 [<Fact>]
 let ``Minimal information`` () =
     let sample = """
-    1-2    vámonos   _
-    1      vamos     ir
-    2      nos       nosotros
-    3-4    al        _
-    3      a         a
-    4      el        el
-    5      mar       mar
-    """
+1-2	vámonos	_
+1	vamos	ir
+2	nos		nosotros
+3-4	al		_
+3	a		a
+4	el		el
+5	mar		mar
+	"""
 
     let parsed = parseSentence sample
     Assert.Empty(parsed.Comments)
@@ -32,14 +32,14 @@ let ``Minimal information`` () =
 [<Fact>]
 let ``Null positions parsed`` () =
     let sample = """
-    1      Sue       Sue
-    2      likes     like
-    3      coffee    coffee
-    4      and       and
-    5      Bill      Bill
-    5.1    likes     like
-    6      tea       tea
-    """
+1	Sue		Sue
+2	likes	like
+3	coffee	coffee
+4	and		and
+5	Bill	Bill
+5.1	likes	like
+6	tea		tea
+	"""
 
     let parsed = parseSentence sample
     Assert.Empty(parsed.Comments)
@@ -55,13 +55,13 @@ let ``Null positions parsed`` () =
 [<Fact>]
 let ``Morphological Annotation`` () =
     let sample = """
-1    Då      då     ADV      AB                    _
-2    var     vara   VERB     VB.PRET.ACT           Tense=Past|Voice=Act
-3    han     han    PRON     PN.UTR.SIN.DEF.NOM    Case=Nom|Definite=Def|Gender=Com|Number=Sing
-4    elva    elva   NUM      RG.NOM                Case=Nom|NumType=Card
-5    år      år     NOUN     NN.NEU.PLU.IND.NOM    Case=Nom|Definite=Ind|Gender=Neut|Number=Plur
-6    .       .      PUNCT    DL.MAD                _
-    """
+1	Då		då		ADV		AB					_
+2	var		vara	VERB	VB.PRET.ACT			Tense=Past|Voice=Act
+3	han		han		PRON	PN.UTR.SIN.DEF.NOM	Case=Nom|Definite=Def|Gender=Com|Number=Sing
+4	elva	elva	NUM		RG.NOM				Case=Nom|NumType=Card
+5	år		år		NOUN	NN.NEU.PLU.IND.NOM	Case=Nom|Definite=Ind|Gender=Neut|Number=Plur
+6	.		.		PUNCT	DL.MAD				_
+	"""
 
     let parsed = parseSentence sample
     Assert.Empty(parsed.Comments)
@@ -85,13 +85,13 @@ let ``Morphological Annotation`` () =
 [<Fact>]
 let ``Syntactic Annotation`` () =
     let sample = """
-1    They     they    PRON    PRP    Case=Nom|Number=Plur               2    nsubj    2:nsubj|4:nsubj
-2    buy      buy     VERB    VBP    Number=Plur|Person=3|Tense=Pres    0    root     0:root
-3    and      and     CCONJ   CC     _                                  4    cc       4:cc
-4    sell     sell    VERB    VBP    Number=Plur|Person=3|Tense=Pres    2    conj     0:root|2:conj
-5    books    book    NOUN    NNS    Number=Plur                        2    obj      2:obj|4:obj
-6    .        .       PUNCT   .      _                                  2    punct    2:punct
-    """
+1	They	they	PRON	PRP	Case=Nom|Number=Plur			2	nsubj	2:nsubj|4:nsubj
+2	buy		buy		VERB	VBP	Number=Plur|Person=3|Tense=Pres	0	root	0:root
+3	and		and		CCONJ	CC	_								4	cc		4:cc
+4	sell	sell	VERB	VBP	Number=Plur|Person=3|Tense=Pres	2	conj	0:root|2:conj
+5	books	book	NOUN	NNS	Number=Plur						2	obj		2:obj|4:obj
+6	.		.		PUNCT	.	_								2	punct	2:punct
+	"""
 
     let parsed = parseSentence sample
     Assert.Empty(parsed.Comments)
@@ -131,7 +131,7 @@ let ``Thousands in form can have whitespaces`` () =
 15	19 700	19700	NUM	Mlc-n	Case=Nom|NumType=Card|Uninflect=Yes	13	parataxis	13:parataxis	Id=2m16|LTranslit=19700|SpaceAfter=No|Translit=19 700
 16	)	)	PUNCT	U	_	15	punct	15:punct	Id=2m17|LTranslit=)|SpaceAfter=No|Translit=)
 17	.	.	PUNCT	U	_	12	punct	12:punct	Id=2m18|LTranslit=.|Translit=.
-    """
+	"""
 
     let parsed = parseSentence sample
     Assert.Equal(3, parsed.Comments.Count)
@@ -162,7 +162,7 @@ let ``Millions in form can have whitespaces`` () =
 15	19 700	19700	NUM	Mlc-n	Case=Nom|NumType=Card|Uninflect=Yes	13	parataxis	13:parataxis	Id=2m16|LTranslit=19700|SpaceAfter=No|Translit=19 700
 16	)	)	PUNCT	U	_	15	punct	15:punct	Id=2m17|LTranslit=)|SpaceAfter=No|Translit=)
 17	.	.	PUNCT	U	_	12	punct	12:punct	Id=2m18|LTranslit=.|Translit=.
-    """
+	"""
 
     let parsed = parseSentence sample
     Assert.Equal(3, parsed.Comments.Count)
@@ -187,7 +187,7 @@ let ``Lemma can have whitespaces`` () =
 10	một	một	NUM	NUM	_	11	nummod	_	_
 11	ngày	ngày	NOUN	N	_	8	obl:tmod	_	_
 12	.	.	PUNCT	PUNCT	_	4	punct	_	_
-    """
+	"""
 
     let parsed = parseSentence sample
     Assert.Equal(2, parsed.Comments.Count)
@@ -198,8 +198,8 @@ let ``Lemma can have whitespaces`` () =
 [<Fact>]
 let ``UPOS can be missing`` () =
     let sample = """
-    1-2   He's      _         _       _       _                                 _   _       _   _
-    """
+1-2	He's	_	_	_	_	_	_	_	_
+	"""
 
     let parsed = parseSentence sample
     Assert.Empty(parsed.Comments)
@@ -216,13 +216,13 @@ let ``UPOS can be missing`` () =
 [<Fact>]
 let ``Parse miscellaneous`` () =
     let sample = """
-    1   Slovenská   slovenský   ADJ     AAFS1----1A---- Case=Nom|Degree=Pos|Gender=Fem|Number=Sing|Polarity=Pos 2 amod _ _
-    2   ústava      ústava      NOUN    NNFS1-----A---- Case=Nom|Gender=Fem|Number=Sing|Polarity=Pos 0 root _ SpaceAfter=No
-    3   :           :           PUNCT   Z:------------- _          2       punct   _       _
-    4   pro         pro         ADP     RR--4---------- Case=Acc   2       appos   _       LId=pro-1
-    5   i           i           CCONJ   J^------------- _          6       cc      _       LId=i-1
-    6   proti       proti       ADP     RR--3---------- Case=Dat   4       conj    _       LId=proti-1
-    """
+1	Slovenská	slovenský	ADJ		AAFS1----1A----	Case=Nom|Degree=Pos|Gender=Fem|Number=Sing|Polarity=Pos	2	amod	_	_
+2	ústava		ústava		NOUN	NNFS1-----A----	Case=Nom|Gender=Fem|Number=Sing|Polarity=Pos			0	root	_	SpaceAfter=No
+3	:			:			PUNCT	Z:-------------	_														2	punct	_	_
+4	pro			pro			ADP		RR--4----------	Case=Acc												2	appos	_	LId=pro-1
+5	i			i			CCONJ	J^-------------	_														6	cc		_	LId=i-1
+6	proti		proti		ADP		RR--3----------	Case=Dat												4	conj	_	LId=proti-1
+	"""
 
     let parsed = parseSentence sample
     Assert.Empty(parsed.Comments)
@@ -233,18 +233,18 @@ let ``Parse miscellaneous`` () =
 [<Fact>]
 let ``Parse comments`` () =
     let sample = """
-    # newdoc id = mf920901-001
-    # newpar id = mf920901-001-p1
-    # sent_id = mf920901-001-p1s1A
-    # text = Slovenská ústava: pro i proti
-    # text_en = Slovak constitution: pros and cons
-    1   Slovenská   slovenský   ADJ     AAFS1----1A---- Case=Nom|Degree=Pos|Gender=Fem|Number=Sing|Polarity=Pos 2 amod _ _
-    2   ústava      ústava      NOUN    NNFS1-----A---- Case=Nom|Gender=Fem|Number=Sing|Polarity=Pos 0 root _ SpaceAfter=No
-    3   :           :           PUNCT   Z:------------- _          2       punct   _       _
-    4   pro         pro         ADP     RR--4---------- Case=Acc   2       appos   _       LId=pro-1
-    5   i           i           CCONJ   J^------------- _          6       cc      _       LId=i-1
-    6   proti       proti       ADP     RR--3---------- Case=Dat   4       conj    _       LId=proti-1
-    """
+# newdoc id = mf920901-001
+# newpar id = mf920901-001-p1
+# sent_id = mf920901-001-p1s1A
+# text = Slovenská ústava: pro i proti
+# text_en = Slovak constitution: pros and cons
+1	Slovenská	slovenský	ADJ		AAFS1----1A----	Case=Nom|Degree=Pos|Gender=Fem|Number=Sing|Polarity=Pos	2	amod	_	_
+2	ústava		ústava		NOUN	NNFS1-----A----	Case=Nom|Gender=Fem|Number=Sing|Polarity=Pos			0	root	_	SpaceAfter=No
+3	:			:			PUNCT	Z:-------------	_														2	punct	_	_
+4	pro			pro			ADP		RR--4----------	Case=Acc												2	appos	_	LId=pro-1
+5	i			i			CCONJ	J^-------------	_														6	cc		_	LId=i-1
+6	proti		proti		ADP		RR--3----------	Case=Dat												4	conj	_	LId=proti-1
+	"""
 
     let parsed = parseSentence sample
     Assert.Equal(5, parsed.Comments.Count)
@@ -299,14 +299,14 @@ let ``Parse file`` () =
 [<Fact>]
 let ``Reconstruct sentence`` () =
     let sample = """
-    1-2    vámonos   _
-    1      vamos     ir
-    2      nos       nosotros
-    3-4    al        _
-    3      a         a
-    4      el        el
-    5      mar       mar
-    """
+1-2	vámonos	_
+1	vamos	ir
+2	nos		nosotros
+3-4	al		_
+3	a		a
+4	el		el
+5	mar		mar
+	"""
 
     let parsed = parseSentence sample
     let reconstructed = reconstructSentence parsed
@@ -315,14 +315,14 @@ let ``Reconstruct sentence`` () =
 [<Fact>]
 let ``Null positions reconstructed`` () =
     let sample = """
-    1      Sue       Sue
-    2      likes     like
-    3      coffee    coffee
-    4      and       and
-    5      Bill      Bill
-    5.1    likes     like
-    6      tea       tea
-    """
+1	Sue		Sue
+2	likes	like
+3	coffee	coffee
+4	and		and
+5	Bill	Bill
+5.1	likes	like
+6	tea		tea
+	"""
 
     let parsed = parseSentence sample
     let reconstructed = reconstructSentence parsed
