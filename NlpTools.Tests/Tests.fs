@@ -109,7 +109,7 @@ let ``Syntactic Annotation`` () =
     Assert.Equal(Some("2:nsubj|4:nsubj"), parsed.Words[0].Dependencies)
 
 [<Fact>]
-let ``Numbers in form can have whitespaces`` () =
+let ``Thousands in form can have whitespaces`` () =
     let sample = """
 # sent_id = 2m0p
 # text = У 1995-му Сінгапур із 26 000 дол. США на душу населення обійшов Британію (19 700).
@@ -136,6 +136,64 @@ let ``Numbers in form can have whitespaces`` () =
     let parsed = parseSentence sample
     Assert.Equal(3, parsed.Comments.Count)
     Assert.Equal(17, parsed.Words.Length)
+    Assert.Equal("26 000", parsed.Words[4].Form)
+    Assert.Equal(Some("26000"), parsed.Words[4].Lemma)
+
+[<Fact>]
+let ``Millions in form can have whitespaces`` () =
+    let sample = """
+# sent_id = 2m0p
+# text = У 1995-му Сінгапур із 26 000 дол. США на душу населення обійшов Британію (19 700).
+# translit = U 1995-mu Sinhapur iz 26 000 dol. SŠA na dušu naselenńа obijšov Brytaniju (19 700).
+1	У	у	ADP	Spsl	Case=Loc	2	case	2:case	Id=2m0q|LTranslit=u|Translit=U
+2	1995-му	1995-ий	NOUN	Ao-mslf	Animacy=Inan|Case=Loc|Gender=Masc|Number=Sing	12	obl	12:obl	Id=2m0r|LTranslit=1995-yj|Translit=1995-mu
+3	Сінгапур	Сінгапур	PROPN	Npmsnn	Animacy=Inan|Case=Nom|Gender=Masc|Number=Sing	12	nsubj	12:nsubj	Id=2m0s|LTranslit=Sinhapur|Translit=Sinhapur
+4	із	із	ADP	Spsi	Case=Ins	6	case	6:case	Id=2m0t|LTranslit=iz|Translit=iz
+5	26 000 000	26000000	NUM	Mlc-i	Case=Ins|NumType=Card|Uninflect=Yes	6	nummod	6:nummod	Id=2m0v|LTranslit=26000|Translit=26 000 000
+6	дол	дол.	NOUN	Y	Abbr=Yes|Animacy=Inan|Case=Ins|Gender=Masc|Number=Plur|Uninflect=Yes	3	nmod	3:nmod	Id=2m0w|LTranslit=dol.|SpaceAfter=No|Translit=dol
+7	.	.	PUNCT	U	_	6	punct	6:punct	Id=2m0x|LTranslit=.|Translit=.
+8	США	США	PROPN	Np-pgn	Animacy=Inan|Case=Gen|Number=Ptan|Uninflect=Yes	6	nmod	6:nmod	Id=2m0y|LTranslit=SŠA|Translit=SŠA
+9	на	на	ADP	Spsa	Case=Acc	10	case	10:case	Id=2m0z|LTranslit=na|Translit=na
+10	душу	душа	NOUN	Ncfsan	Animacy=Inan|Case=Acc|Gender=Fem|Number=Sing	6	nmod	6:nmod	Id=2m10|LTranslit=duša|Translit=dušu
+11	населення	населення	NOUN	Ncnsgn	Animacy=Inan|Case=Gen|Gender=Neut|Number=Sing	10	nmod	10:nmod	Id=2m11|LTranslit=naselenńа|Translit=naselenńа
+12	обійшов	обійти	VERB	Vmeis-sm	Aspect=Perf|Gender=Masc|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin	0	root	0:root	Id=2m12|LTranslit=obijty|Translit=obijšov
+13	Британію	Британія	PROPN	Npfsan	Animacy=Inan|Case=Acc|Gender=Fem|Number=Sing	12	obj	12:obj	Id=2m13|LTranslit=Brytanija|Translit=Brytaniju
+14	(	(	PUNCT	U	_	15	punct	15:punct	Id=2m14|LTranslit=(|SpaceAfter=No|Translit=(
+15	19 700	19700	NUM	Mlc-n	Case=Nom|NumType=Card|Uninflect=Yes	13	parataxis	13:parataxis	Id=2m16|LTranslit=19700|SpaceAfter=No|Translit=19 700
+16	)	)	PUNCT	U	_	15	punct	15:punct	Id=2m17|LTranslit=)|SpaceAfter=No|Translit=)
+17	.	.	PUNCT	U	_	12	punct	12:punct	Id=2m18|LTranslit=.|Translit=.
+    """
+
+    let parsed = parseSentence sample
+    Assert.Equal(3, parsed.Comments.Count)
+    Assert.Equal(17, parsed.Words.Length)
+    Assert.Equal("26 000 000", parsed.Words[4].Form)
+    Assert.Equal(Some("26000000"), parsed.Words[4].Lemma)
+
+[<Fact>]
+let ``Lemma can have whitespaces`` () =
+    let sample = """
+# sent_id = dev-16001
+# text = Ga giường không sạch , nhân viên quên dọn phòng một ngày .
+1	Ga	ga	NOUN	N	_	4	nsubj	_	_
+2	giường	giường	NOUN	N	_	1	nmod	_	_
+3	không	không	ADV	ADV	_	4	advmod:neg	_	_
+4	sạch	sạch	ADJ	ADJ	_	0	root	_	_
+5	,	,	PUNCT	PUNCT	_	7	punct	_	_
+6	nhân viên	nhân viên	NOUN	N	_	7	nsubj	_	_
+7	quên	quên	VERB	V	_	4	conj	_	_
+8	dọn	dọn	VERB	V	_	7	xcomp	_	_
+9	phòng	phòng	NOUN	N	_	8	obj	_	_
+10	một	một	NUM	NUM	_	11	nummod	_	_
+11	ngày	ngày	NOUN	N	_	8	obl:tmod	_	_
+12	.	.	PUNCT	PUNCT	_	4	punct	_	_
+    """
+
+    let parsed = parseSentence sample
+    Assert.Equal(2, parsed.Comments.Count)
+    Assert.Equal(12, parsed.Words.Length)
+    Assert.Equal("nhân viên", parsed.Words[5].Form)
+    Assert.Equal(Some("nhân viên"), parsed.Words[5].Lemma)
 
 [<Fact>]
 let ``UPOS can be missing`` () =

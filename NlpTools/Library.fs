@@ -74,17 +74,69 @@ module CoNLLU =
 
         result
 
-    let printDictionary (features: Dictionary<string, string>) =
+    let private printDictionary (features: Dictionary<string, string>) =
         let x = features.Select(fun x -> $"{x.Key}={x.Value}")
         String.concat "|" x
 
-    let private parseWord (word:string) =
-        let fixup (p: string array) =
-            match p.Length with
-            | 12 -> [| p[0]; p[1] + " " + p[2]; p[3]; p[4]; p[5]; p[6]; p[7]; p[8]; p[9]; p[10] + " " + p[11] |]
-            | 14 -> [| p[0]; p[1] + " " + p[2] + " " + p[3]; p[4]; p[5]; p[6]; p[7]; p[8]; p[9]; p[10]; p[11] + " " + p[12] + " " + p[13] |]
-            | _ -> p
-        let parts = word.Split ([|' ' ; '\t'|], StringSplitOptions.RemoveEmptyEntries) |> fixup
+    let private parseOptionalString value =
+        match value with
+        | "_" -> None
+        | _ -> Some(value)
+
+    let private isUpos posString =
+        match posString with
+        | "ADJ"   -> true
+        | "ADP"   -> true
+        | "ADV"   -> true
+        | "AUX"   -> true
+        | "CCONJ" -> true
+        | "DET"   -> true
+        | "INTJ"  -> true
+        | "NOUN"  -> true
+        | "NUM"   -> true
+        | "PART"  -> true
+        | "PRON"  -> true
+        | "PROPN" -> true
+        | "PUNCT" -> true
+        | "SCONJ" -> true
+        | "SYM"   -> true
+        | "VERB"  -> true
+        | "X"     -> true
+        | "_"     -> true
+        | _ -> false
+
+    let private parseUpos posString =
+        match posString with
+        | Some pos ->
+            match pos with
+            | "ADJ"   -> Some(Adjective)
+            | "ADP"   -> Some(Adposition)
+            | "ADV"   -> Some(Adverb)
+            | "AUX"   -> Some(Auxiliary)
+            | "CCONJ" -> Some(CoordinatingConjunction)
+            | "DET"   -> Some(Determiner)
+            | "INTJ"  -> Some(Interjection)
+            | "NOUN"  -> Some(Noun)
+            | "NUM"   -> Some(Numeral)
+            | "PART"  -> Some(Particle)
+            | "PRON"  -> Some(Pronoun)
+            | "PROPN" -> Some(ProperNoun)
+            | "PUNCT" -> Some(Punctuation)
+            | "SCONJ" -> Some(SubordinatingConjunction)
+            | "SYM"   -> Some(Symbol)
+            | "VERB"  -> Some(Verb)
+            | "X"     -> Some(Other)
+            | "_"     -> None
+            | _ -> failwith $"Unknown universal part of speech %s{pos}"
+        | None -> None
+    
+    let private parseString v =
+        match v with
+        | Some v when v = "_" -> None
+        | None -> None
+        | _ -> v
+
+    let private parseWordSimple (parts: string array) =
         let wordIdString = parts[0]
         let wordId = match wordIdString.Split [| '-' |] with
                         | [| head ; tail |] -> Range (head |> int, tail |> int)
@@ -92,46 +144,12 @@ module CoNLLU =
                                         | [| head ; tail |] -> NullPosition (head |> int, tail |> int)
                                         | [| head |] -> Position (head |> int)
                                         | _ -> failwith $"Invalid word id '%s{wordIdString}'"
-        let parseOptionalString value =
-            match value with
-            | "_" -> None
-            | _ -> Some(value)
 
-        let upos = 
-            match Array.tryItem 3 parts with
-                | Some pos ->
-                    let posType =
-                        match pos with
-                        | "ADJ"   -> Some(Adjective)
-                        | "ADP"   -> Some(Adposition)
-                        | "ADV"   -> Some(Adverb)
-                        | "AUX"   -> Some(Auxiliary)
-                        | "CCONJ" -> Some(CoordinatingConjunction)
-                        | "DET"   -> Some(Determiner)
-                        | "INTJ"  -> Some(Interjection)
-                        | "NOUN"  -> Some(Noun)
-                        | "NUM"   -> Some(Numeral)
-                        | "PART"  -> Some(Particle)
-                        | "PRON"  -> Some(Pronoun)
-                        | "PROPN" -> Some(ProperNoun)
-                        | "PUNCT" -> Some(Punctuation)
-                        | "SCONJ" -> Some(SubordinatingConjunction)
-                        | "SYM"   -> Some(Symbol)
-                        | "VERB"  -> Some(Verb)
-                        | "X"     -> Some(Other)
-                        | "_"     -> None
-                        | _ -> failwith $"Unknown universal part of speech %s{parts[3]}"
-                    posType
-                | None -> None
+        let upos = parseUpos (Array.tryItem 3 parts)
         let head =
             match defaultArg (Array.tryItem 6 parts) "0" with
             | "_" -> None
             | head -> Some(head |> byte)
-        let parseString v =
-            match v with
-            | Some v when v = "_" -> None
-            | None -> None
-            | _ -> v
         { ID = wordId
           Form = parts[1]
           Lemma = parseOptionalString parts[2]
@@ -142,6 +160,43 @@ module CoNLLU =
           DependencyRelation = parseString (Array.tryItem 7 parts);
           Dependencies = parseString (Array.tryItem 8 parts);
           Miscellaneous = parseDictionary (defaultArg (Array.tryItem 9 parts) ""); }
+
+    let private parseWord (word:string) =
+        let strContainsOnlyNumber (s:string) = System.Int32.TryParse s |> fst
+        let fixup (p: string array) =
+            match p with
+            | p when isUpos p[4] -> [| p[0]; p[1] + " " + p[2]; p[3]; p[4] (* upos *); p[5]; p[6]; p[7]; p[8]; p[9]; p[10] + " " + p[11] |]
+            | p when isUpos p[5] && strContainsOnlyNumber p[1] -> [| p[0]; p[1] + " " + p[2] + " " + p[3]; p[4]; p[5] (* upos *); p[6]; p[7]; p[8]; p[9]; p[10]; p[11] + " " + p[12] + " " + p[13] |]
+            | p when isUpos p[5] && not (strContainsOnlyNumber p[1]) -> [| p[0]; p[1] + " " + p[2]; p[3] + " " + p[4]; p[5] (* upos *); p[6]; p[7]; p[8]; p[9]; p[10]; p[11] |]
+            | _ -> p
+        let oparts = word.Split ([|' ' ; '\t'|], StringSplitOptions.RemoveEmptyEntries)
+        match oparts.Length with
+        | x when x <= 10 -> parseWordSimple oparts
+        | _ ->
+            let parts = oparts |> fixup
+            let wordIdString = parts[0]
+            let wordId = match wordIdString.Split [| '-' |] with
+                            | [| head ; tail |] -> Range (head |> int, tail |> int)
+                            | _ -> match wordIdString.Split [| '.' |] with
+                                            | [| head ; tail |] -> NullPosition (head |> int, tail |> int)
+                                            | [| head |] -> Position (head |> int)
+                                            | _ -> failwith $"Invalid word id '%s{wordIdString}'"
+
+            let upos = parseUpos (Array.tryItem 3 parts)
+            let head =
+                match defaultArg (Array.tryItem 6 parts) "0" with
+                | "_" -> None
+                | head -> Some(head |> byte)
+            { ID = wordId
+              Form = parts[1]
+              Lemma = parseOptionalString parts[2]
+              UniversalPartOfSpeech = upos;
+              LanguageSpecificPartOfSpeech = parseString (Array.tryItem 4 parts);
+              Features = parseDictionary (defaultArg (Array.tryItem 5 parts) "");
+              Head = head;
+              DependencyRelation = parseString (Array.tryItem 7 parts);
+              Dependencies = parseString (Array.tryItem 8 parts);
+              Miscellaneous = parseDictionary (defaultArg (Array.tryItem 9 parts) ""); }
 
     let parseSentence (sentence: string) = 
         let parts = sentence.Split ([|'\r' ; '\n'|], StringSplitOptions.TrimEntries)
