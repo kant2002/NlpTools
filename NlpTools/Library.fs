@@ -67,10 +67,11 @@ module CoNLLU =
     let private parseDictionary (features:string) =
         let featuresArray = features.Split [| '|' |]
         let result = Dictionary<string, string>()
-        if features <> "_" && features <> "" then
+        if features <> "" then
             for featureDef in featuresArray do
-                let parts = featureDef.Split [| '=' |]
-                result.Add(parts[0], parts[1])
+                if featureDef <> "_" then
+                    let parts = featureDef.Split [| '=' |]
+                    result.Add(parts[0], parts[1])
 
         result
 
