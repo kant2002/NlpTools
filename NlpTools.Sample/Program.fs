@@ -56,7 +56,13 @@ let main(args) =
             let p = parseFile args[0]
             printfn "Parsed %d sentences" p.Length
 
-            let translit = p.SelectMany((fun x -> x.Words |> List.toSeq)).Where(fun x -> x.Miscellaneous.ContainsKey("Translit") && x.UniversalPartOfSpeech <> Some(Punctuation) && x.UniversalPartOfSpeech <> Some(Numeral)).Select(fun x-> x.Miscellaneous["Translit"]).Distinct()
+            let translit = 
+                p 
+                    |> Seq.collect(fun x -> x.Words |> List.toSeq)
+                    |> Seq.filter(fun x -> x.Miscellaneous.ContainsKey("Translit") && x.UniversalPartOfSpeech <> Some(Punctuation) && x.UniversalPartOfSpeech <> Some(Numeral))
+                    |> Seq.map(fun x-> x.Miscellaneous["Translit"])
+                    |> Seq.distinct
+
             let outputfile = defaultArg (Array.tryItem 1 args) "translit.txt"
             File.WriteAllLines (outputfile, translit)
 
