@@ -167,6 +167,10 @@ module CoNLLU =
         let blocks = block.ReplaceLineEndings("\r\n").Split "\r\n\r\n"
         blocks |> Seq.filter (fun x -> x <> "") |> Seq.map parseSentence |> Seq.toList
 
+    let parseFile filename =
+        let text = System.IO.File.ReadAllText filename
+        parseBlock text
+
     let printWord word =
         let wordId = match word.ID with
                         | Range (start,finish) -> sprintf "%d-%d" start finish

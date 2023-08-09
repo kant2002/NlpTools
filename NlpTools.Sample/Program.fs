@@ -48,9 +48,8 @@ printSentence parsed3
 printfn ""
 
 if File.Exists "../../../uk_iu-ud-train.conllu.txt" then
-    let text = File.ReadAllText "../../../uk_iu-ud-train.conllu.txt"
-    //let text = File.ReadAllText "../../../en_ewt-ud-train.conllu.txt"
-    let p = parseBlock text
+    let p = parseFile "../../../uk_iu-ud-train.conllu.txt"
+    let p = parseFile "../../../en_ewt-ud-train.conllu.txt"
     printfn "Parsed %d sentences" p.Length
 
     let translit = p.SelectMany((fun x -> x.Words |> List.toSeq)).Where(fun x -> x.Miscellaneous.ContainsKey("Translit") && x.UniversalPartOfSpeech <> Some(Punctuation) && x.UniversalPartOfSpeech <> Some(Numeral)).Select(fun x-> x.Miscellaneous["Translit"]).Distinct()
