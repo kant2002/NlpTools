@@ -1,6 +1,7 @@
 ﻿open BenchmarkDotNet.Attributes
 open BenchmarkDotNet.Running
 open NlpTools.CoNLLU
+open System
 open System.IO
 
 let sample1 = """
@@ -56,6 +57,9 @@ type SentenceBench() =
 
     [<Benchmark>]
     member _.LotOfSentences() = parseBlock sample2
+
+    [<Benchmark>]
+    member _.LotOfSentencesSpan() = parseBlockSpan (sample2.AsSpan())
 
 [<EntryPoint>]
 let main argv =

@@ -61,7 +61,7 @@ module CoNLLU =
           Miscellaneous: Dictionary<string, string>; }
 
     type Sentence =
-        { Words: Word list;
+        { Words: List<Word>;
           Comments: Dictionary<string, string>; }
 
     let private parseDictionary (features:string) =
@@ -163,29 +163,54 @@ module CoNLLU =
           Dependencies = parseString (Array.tryItem 8 parts);
           Miscellaneous = parseDictionary (defaultArg (Array.tryItem 9 parts) ""); }
 
-    let parseSentence (sentence: string) = 
-        let parts = sentence.Split ([|'\r' ; '\n'|], StringSplitOptions.TrimEntries)
-        let mutable words = []
+    let private processWord (words:List<Word>) (comments: Dictionary<string, string>) p =
+        match p with
+        | "" -> ()
+        | line when line.StartsWith('#') ->
+            let comment = line.Substring(1)
+            let p = comment.Split ([| '=' |], 2, StringSplitOptions.TrimEntries)
+            if p.Length = 1 then
+                comments.Add(comment, "")
+            else
+                comments.Add(p[0], p[1])
+        | _ -> 
+            let word = parseWord p
+            words.Add(word)
+
+    let private parseSentenceSeq (sentence: string seq) = 
+        let words = List<Word>()
         let comments = Dictionary<string, string>()
-        for p in parts do
-            match p with
-            | "" -> ()
-            | line when line.StartsWith('#') ->
-                let comment = line.Substring(1)
-                let p = comment.Split ([| '=' |], 2, StringSplitOptions.TrimEntries)
-                if p.Length = 1 then
-                    comments.Add(comment, "")
-                else
-                    comments.Add(p[0], p[1])
-            | _ -> 
-                let word = parseWord p
-                words <- words @ [word]
-                ()
+        for p: string: string in sentence do
+            processWord words comments p
+
         { Words = words; Comments = comments }
+
+    let parseSentence (sentence: string) = 
+        let parts = sentence.Split ([|'\n'|], StringSplitOptions.TrimEntries)
+        parseSentenceSeq parts
 
     let parseBlock (block: string) =
         let blocks = block.ReplaceLineEndings("\r\n").Split "\r\n\r\n"
         blocks |> Seq.filter (fun x -> x <> "") |> Seq.map parseSentence |> Seq.toList
+
+    let parseBlockSpan (block: ReadOnlySpan<char>) =
+        let result = List<Sentence>()
+        let mutable words = List<Word>()
+        let mutable comments = Dictionary<string, string>()
+        
+        let moveNext () =
+            if words.Count > 0 || comments.Count > 0 then
+                result.Add({ Words = words; Comments = comments });
+                words <- List<Word>()
+                comments <- Dictionary<string, string>()
+
+        for output in block.EnumerateLines() do
+            if output.Length <> 0 then
+                processWord words comments (output.ToString())
+            else
+                moveNext ()
+        moveNext ()
+        result
 
     let parseFile filename =
         let text = System.IO.File.ReadAllText filename
