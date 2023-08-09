@@ -58,7 +58,7 @@ let main(args) =
 
             let translit = 
                 p 
-                    |> Seq.collect(fun x -> x.Words |> List.toSeq)
+                    |> Seq.collect(fun x -> x.Words)
                     |> Seq.filter(fun x -> x.Miscellaneous.ContainsKey("Translit") && x.UniversalPartOfSpeech <> Some(Punctuation) && x.UniversalPartOfSpeech <> Some(Numeral))
                     |> Seq.map(fun x-> x.Miscellaneous["Translit"])
                     |> Seq.distinct
