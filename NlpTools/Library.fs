@@ -5,6 +5,7 @@ open System
 open System.Linq
 open System.Text
 open System.Runtime.CompilerServices
+open System.Globalization
 
 module CoNLLU =
     type PartOfSpeech = 
@@ -65,14 +66,62 @@ module CoNLLU =
         { Words: List<Word>;
           Comments: Dictionary<string, string>; }
 
-    let private parseDictionary (features:string) =
-        let featuresArray = features.Split [| '|' |]
+    [<IsByRefLike; Struct>]
+    type SpanSeparatorEnumerator =
+        struct
+            val mutable private _remaining: ReadOnlySpan<char>;
+            val mutable private _isEnumeratorActive: bool
+            val mutable private _current: ReadOnlySpan<char>;
+            val Separators: ReadOnlySpan<char>;
+
+            new(buffer: ReadOnlySpan<char>, separators: ReadOnlySpan<char>) = { _remaining = buffer ; _isEnumeratorActive = true; _current = ReadOnlySpan<char>(); Separators = separators }
+
+            ///<summary>Returns this instance as an enumerator.</summary>
+            ///<returns>This instance as an enumerator.</returns>
+            member self.GetEnumerator() = self
+            
+
+            ///<summary>Advances the enumerator to the next line of the span.</summary>
+            ///<returns><see langword="true" /> if the enumerator successfully advanced to the next line; <see langword="false" /> if the enumerator has advanced past the end of the span.</returns>
+            member self.MoveNext() =
+                if not (self._isEnumeratorActive) then
+                    false // EOF previously reached or enumerator was never initialized
+                else
+                    let remaining = self._remaining;
+
+                    let idx = remaining.IndexOfAny(self.Separators);
+
+                    if ((uint)idx < (uint)remaining.Length) then
+
+                        let stride = 1
+
+                        self._current <- remaining.Slice(0, idx)
+                        self._remaining <- remaining.Slice(idx + stride)
+
+                    else
+                        // We've reached EOF, but we still need to return 'true' for this final
+                        // iteration so that the caller can query the Current property once more.
+
+                        self._current <- remaining
+                        self._remaining <- ReadOnlySpan<char>()
+                        self._isEnumeratorActive <- false
+
+                    true;
+
+            ///<summary>Gets the line at the current position of the enumerator.</summary>
+            ///<returns>The line at the current position of the enumerator.</returns>
+            member self.Current = self._current
+        end
+
+    let private parseDictionary (features: ReadOnlySpan<char>) =
         let result = Dictionary<string, string>()
-        if features <> "" then
-            for featureDef in featuresArray do
-                if featureDef <> "_" then
-                    let parts = featureDef.Split [| '=' |]
-                    result.Add(parts[0], parts[1])
+        if features.Length > 0 then
+            //let featuresArray = features.ToString().Split [| '|' |]
+            let separatorEnumerator = SpanSeparatorEnumerator(features, "|")
+            for featureDef in separatorEnumerator do
+                if not(featureDef.Length = 1 && featureDef[0] = '_') then
+                    let eqPos = featureDef.IndexOf('=')
+                    result.Add(featureDef.Slice(0, eqPos).ToString(), featureDef.Slice(eqPos + 1).ToString())
 
         result
 
@@ -107,6 +156,46 @@ module CoNLLU =
         | "_"     -> true
         | _ -> false
 
+    let private parseUposToken (pos :ReadOnlySpan<char>) =
+        if pos.Equals("ADJ", StringComparison.InvariantCulture) then
+            Some(Adjective)
+        elif pos.Equals("ADP", StringComparison.InvariantCulture) then
+            Some(Adposition)
+        elif pos.Equals("ADV", StringComparison.InvariantCulture) then
+            Some(Adverb)
+        elif pos.Equals("AUX", StringComparison.InvariantCulture) then
+            Some(Auxiliary)
+        elif pos.Equals("CCONJ", StringComparison.InvariantCulture) then
+            Some(CoordinatingConjunction)
+        elif pos.Equals("DET", StringComparison.InvariantCulture) then
+            Some(Determiner)
+        elif pos.Equals("INTJ", StringComparison.InvariantCulture) then
+            Some(Interjection)
+        elif pos.Equals("NOUN", StringComparison.InvariantCulture) then
+            Some(Noun)
+        elif pos.Equals("NUM", StringComparison.InvariantCulture) then
+            Some(Numeral)
+        elif pos.Equals("PART", StringComparison.InvariantCulture) then
+            Some(Particle)
+        elif pos.Equals("PRON", StringComparison.InvariantCulture) then
+            Some(Pronoun)
+        elif pos.Equals("PROPN", StringComparison.InvariantCulture) then
+            Some(ProperNoun)
+        elif pos.Equals("PUNCT", StringComparison.InvariantCulture) then
+            Some(Punctuation)
+        elif pos.Equals("SCONJ", StringComparison.InvariantCulture) then
+            Some(SubordinatingConjunction)
+        elif pos.Equals("SYM", StringComparison.InvariantCulture) then
+            Some(Symbol)
+        elif pos.Equals("VERB", StringComparison.InvariantCulture) then
+            Some(Verb)
+        elif pos.Equals("X", StringComparison.InvariantCulture) then
+            Some(Other)
+        elif pos.Equals("_", StringComparison.InvariantCulture) then
+            None
+        else
+            failwith $"Unknown universal part of speech %s{pos.ToString()}"
+
     let private parseUpos posString =
         match posString with
         | Some pos ->
@@ -137,32 +226,90 @@ module CoNLLU =
         | Some v when v = "_" -> None
         | None -> None
         | _ -> v
+    
+    let private parseToken (v: ReadOnlySpan<char>) =
+        if v.Length = 0 then
+            None
+        elif v.Length = 1 && v[0] = '_' then 
+            None
+        else
+            Some(v.ToString())
 
-    let private parseWord (word:string) =
-        let parts = word.Split ([| '\t' |], StringSplitOptions.RemoveEmptyEntries)
-        let wordIdString = parts[0]
-        let wordId = match wordIdString.Split [| '-' |] with
-                        | [| head ; tail |] -> Range (head |> int, tail |> int)
-                        | _ -> match wordIdString.Split [| '.' |] with
-                                        | [| head ; tail |] -> NullPosition (head |> int, tail |> int)
-                                        | [| head |] -> Position (head |> int)
-                                        | _ -> failwith $"Invalid word id '%s{wordIdString}'"
+    [<Struct; IsByRefLike>]
+    type ParseResult =
+        struct
+            val Token: ReadOnlySpan<char>;
+            val Leftover: ReadOnlySpan<char>;
+            new (token: ReadOnlySpan<char>, leftover: ReadOnlySpan<char>) = { Token = token; Leftover = leftover }
+        end
 
-        let upos = parseUpos (Array.tryItem 3 parts)
+    let nextToken (word: ReadOnlySpan<char>, parseResult : byref<ParseResult>) =
+        let tabToken = word.IndexOf '\t'
+        if tabToken = -1 then
+            parseResult <- ParseResult(word, ReadOnlySpan<char>())
+        else
+            parseResult <- ParseResult(word.Slice(0,tabToken), word.Slice(tabToken + 1))
+
+    let private parseWord (word: ReadOnlySpan<char>) =
+        let mutable parseResult : ParseResult = ParseResult()
+        nextToken (word, &parseResult)
+
+        let wordIdSpan = parseResult.Token
+        let wordId = match wordIdSpan.IndexOf '-' with
+                        | -1 -> match wordIdSpan.IndexOf '.' with
+                                | -1 -> if wordIdSpan.Length > 0 then
+                                            let head = Int32.Parse (wordIdSpan, CultureInfo.InvariantCulture)
+                                            Position (head)
+                                        else
+                                            failwith $"Invalid word id '%s{wordIdSpan.ToString()}'"
+                                | dotPos ->
+                                    let head = Int32.Parse (wordIdSpan.Slice(0, dotPos), CultureInfo.InvariantCulture)
+                                    let tail = Int32.Parse (wordIdSpan.Slice(dotPos + 1), CultureInfo.InvariantCulture)
+                                    NullPosition (head, tail)
+                        | dashPos -> 
+                            let head = Int32.Parse (wordIdSpan.Slice(0, dashPos), CultureInfo.InvariantCulture)
+                            let tail = Int32.Parse (wordIdSpan.Slice(dashPos + 1), CultureInfo.InvariantCulture)
+                            Range (head, tail)
+                            
+        nextToken (parseResult.Leftover, &parseResult)
+        let form = parseResult.Token.ToString()
+
+        nextToken (parseResult.Leftover, &parseResult)
+        let lemma = parseResult.Token.ToString()
+
+        nextToken (parseResult.Leftover, &parseResult)
+        let upos = if parseResult.Token.Length = 0 then None else parseUposToken parseResult.Token
+
+        nextToken (parseResult.Leftover, &parseResult)
+        let lpos = parseToken parseResult.Token
+        nextToken (parseResult.Leftover, &parseResult)
+        let features = parseDictionary parseResult.Token
+        nextToken (parseResult.Leftover, &parseResult)
         let head =
-            match defaultArg (Array.tryItem 6 parts) "0" with
-            | "_" -> None
-            | head -> Some(head |> byte)
+            if parseResult.Token.Length = 0 then 
+                Some(0uy)
+            elif parseResult.Token.Length = 1 && parseResult.Token[0] = '_' then
+                None
+            else
+                Some(Byte.Parse (parseResult.Token, CultureInfo.InvariantCulture))
+
+        nextToken (parseResult.Leftover, &parseResult)
+        let deprel = parseToken parseResult.Token
+        nextToken (parseResult.Leftover, &parseResult)
+        let deps = parseToken parseResult.Token
+        nextToken (parseResult.Leftover, &parseResult)
+        let misc = parseDictionary parseResult.Token
+
         { ID = wordId
-          Form = parts[1]
-          Lemma = parseOptionalString parts[2]
+          Form = form
+          Lemma = parseOptionalString lemma
           UniversalPartOfSpeech = upos;
-          LanguageSpecificPartOfSpeech = parseString (Array.tryItem 4 parts);
-          Features = parseDictionary (defaultArg (Array.tryItem 5 parts) "");
+          LanguageSpecificPartOfSpeech = lpos;
+          Features = features;
           Head = head;
-          DependencyRelation = parseString (Array.tryItem 7 parts);
-          Dependencies = parseString (Array.tryItem 8 parts);
-          Miscellaneous = parseDictionary (defaultArg (Array.tryItem 9 parts) ""); }
+          DependencyRelation = deprel;
+          Dependencies = deps;
+          Miscellaneous = misc; }
 
     let private processWord (words:List<Word>) (comments: Dictionary<string, string>) (p: ReadOnlySpan<char>) =
         match p with
@@ -174,7 +321,7 @@ module CoNLLU =
             else
                 comments.Add(comment.Slice(0, equalIndex).Trim().ToString(), comment.Slice(equalIndex + 1).Trim().ToString())
         | _ -> 
-            let word = parseWord (p.ToString())
+            let word = parseWord p
             words.Add(word)
 
     let private parseSentenceSeq (sentence: SpanLineEnumerator) = 
