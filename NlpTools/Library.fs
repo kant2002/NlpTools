@@ -116,7 +116,6 @@ module CoNLLU =
     let private parseDictionary (features: ReadOnlySpan<char>) =
         let result = Dictionary<string, string>()
         if features.Length > 0 then
-            //let featuresArray = features.ToString().Split [| '|' |]
             let separatorEnumerator = SpanSeparatorEnumerator(features, "|")
             for featureDef in separatorEnumerator do
                 if not(featureDef.Length = 1 && featureDef[0] = '_') then
@@ -134,98 +133,45 @@ module CoNLLU =
         | "_" -> None
         | _ -> Some(value)
 
-    let private isUpos posString =
-        match posString with
-        | "ADJ"   -> true
-        | "ADP"   -> true
-        | "ADV"   -> true
-        | "AUX"   -> true
-        | "CCONJ" -> true
-        | "DET"   -> true
-        | "INTJ"  -> true
-        | "NOUN"  -> true
-        | "NUM"   -> true
-        | "PART"  -> true
-        | "PRON"  -> true
-        | "PROPN" -> true
-        | "PUNCT" -> true
-        | "SCONJ" -> true
-        | "SYM"   -> true
-        | "VERB"  -> true
-        | "X"     -> true
-        | "_"     -> true
-        | _ -> false
-
     let private parseUposToken (pos :ReadOnlySpan<char>) =
-        if pos.Equals("ADJ", StringComparison.InvariantCulture) then
+        if pos.SequenceEqual("ADJ") then
             Some(Adjective)
-        elif pos.Equals("ADP", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("ADP") then
             Some(Adposition)
-        elif pos.Equals("ADV", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("ADV") then
             Some(Adverb)
-        elif pos.Equals("AUX", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("AUX") then
             Some(Auxiliary)
-        elif pos.Equals("CCONJ", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("CCONJ") then
             Some(CoordinatingConjunction)
-        elif pos.Equals("DET", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("DET") then
             Some(Determiner)
-        elif pos.Equals("INTJ", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("INTJ") then
             Some(Interjection)
-        elif pos.Equals("NOUN", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("NOUN") then
             Some(Noun)
-        elif pos.Equals("NUM", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("NUM") then
             Some(Numeral)
-        elif pos.Equals("PART", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("PART") then
             Some(Particle)
-        elif pos.Equals("PRON", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("PRON") then
             Some(Pronoun)
-        elif pos.Equals("PROPN", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("PROPN") then
             Some(ProperNoun)
-        elif pos.Equals("PUNCT", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("PUNCT") then
             Some(Punctuation)
-        elif pos.Equals("SCONJ", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("SCONJ") then
             Some(SubordinatingConjunction)
-        elif pos.Equals("SYM", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("SYM") then
             Some(Symbol)
-        elif pos.Equals("VERB", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("VERB") then
             Some(Verb)
-        elif pos.Equals("X", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("X") then
             Some(Other)
-        elif pos.Equals("_", StringComparison.InvariantCulture) then
+        elif pos.SequenceEqual("_") then
             None
         else
             failwith $"Unknown universal part of speech %s{pos.ToString()}"
-
-    let private parseUpos posString =
-        match posString with
-        | Some pos ->
-            match pos with
-            | "ADJ"   -> Some(Adjective)
-            | "ADP"   -> Some(Adposition)
-            | "ADV"   -> Some(Adverb)
-            | "AUX"   -> Some(Auxiliary)
-            | "CCONJ" -> Some(CoordinatingConjunction)
-            | "DET"   -> Some(Determiner)
-            | "INTJ"  -> Some(Interjection)
-            | "NOUN"  -> Some(Noun)
-            | "NUM"   -> Some(Numeral)
-            | "PART"  -> Some(Particle)
-            | "PRON"  -> Some(Pronoun)
-            | "PROPN" -> Some(ProperNoun)
-            | "PUNCT" -> Some(Punctuation)
-            | "SCONJ" -> Some(SubordinatingConjunction)
-            | "SYM"   -> Some(Symbol)
-            | "VERB"  -> Some(Verb)
-            | "X"     -> Some(Other)
-            | "_"     -> None
-            | _ -> failwith $"Unknown universal part of speech %s{pos}"
-        | None -> None
-    
-    let private parseString v =
-        match v with
-        | Some v when v = "_" -> None
-        | None -> None
-        | _ -> v
     
     let private parseToken (v: ReadOnlySpan<char>) =
         if v.Length = 0 then
