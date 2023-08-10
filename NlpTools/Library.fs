@@ -4,6 +4,7 @@ open System.Collections.Generic
 open System
 open System.Linq
 open System.Text
+open System.Runtime.CompilerServices
 
 module CoNLLU =
     type PartOfSpeech = 
@@ -163,31 +164,34 @@ module CoNLLU =
           Dependencies = parseString (Array.tryItem 8 parts);
           Miscellaneous = parseDictionary (defaultArg (Array.tryItem 9 parts) ""); }
 
-    let private processWord (words:List<Word>) (comments: Dictionary<string, string>) p =
+    let private processWord (words:List<Word>) (comments: Dictionary<string, string>) (p: ReadOnlySpan<char>) =
         match p with
-        | "" -> ()
-        | line when line.StartsWith('#') ->
-            let comment = line.Substring(1)
-            let p = comment.Split ([| '=' |], 2, StringSplitOptions.TrimEntries)
-            if p.Length = 1 then
-                comments.Add(comment, "")
+        | line when line.StartsWith("#") ->
+            let comment = line.Slice(1)
+            let equalIndex = comment.IndexOf('=')
+            if equalIndex = -1 then
+                comments.Add(comment.Trim().ToString(), "")
             else
-                comments.Add(p[0], p[1])
+                comments.Add(comment.Slice(0, equalIndex).Trim().ToString(), comment.Slice(equalIndex + 1).Trim().ToString())
         | _ -> 
-            let word = parseWord p
+            let word = parseWord (p.ToString())
             words.Add(word)
 
-    let private parseSentenceSeq (sentence: string seq) = 
+    let private parseSentenceSeq (sentence: SpanLineEnumerator) = 
         let words = List<Word>()
         let comments = Dictionary<string, string>()
-        for p: string: string in sentence do
-            processWord words comments p
+        for p in sentence do
+            let word = p.Trim()
+            if word.Length <> 0 then
+                processWord words comments word
 
         { Words = words; Comments = comments }
 
+    let parseSentenceSpan (sentence: ReadOnlySpan<char>) = 
+        parseSentenceSeq (sentence.EnumerateLines ())
+
     let parseSentence (sentence: string) = 
-        let parts = sentence.Split ([|'\n'|], StringSplitOptions.TrimEntries)
-        parseSentenceSeq parts
+        parseSentenceSpan (sentence.AsSpan())
 
     let parseBlock (block: string) =
         let blocks = block.ReplaceLineEndings("\r\n").Split "\r\n\r\n"
@@ -206,7 +210,7 @@ module CoNLLU =
 
         for output in block.EnumerateLines() do
             if output.Length <> 0 then
-                processWord words comments (output.ToString())
+                processWord words comments output
             else
                 moveNext ()
         moveNext ()
