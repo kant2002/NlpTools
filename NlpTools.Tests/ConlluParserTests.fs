@@ -1,4 +1,4 @@
-module Tests
+module ConluuParserTests
 
 open System
 open Xunit
