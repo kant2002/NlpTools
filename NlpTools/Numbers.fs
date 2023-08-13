@@ -45,6 +45,18 @@ module Number2Words =
         "дев'яносто"
     |]
 
+    let hundreds_text = [|
+        "сто"
+        "двісті"
+        "триста"
+        "чотириста"
+        "п'ятсот"
+        "шістсот"
+        "сімсот"
+        "вісімсот"
+        "дев'ятсот"
+    |]
+
     type Gender =
     | Feminine
     | Masculine
@@ -54,15 +66,20 @@ module Number2Words =
         if number = 0 
             then "нуль"
         else
-            let tens = number / 10 % 10
+            let hundreds = (number / 100) % 10
+            let tens = (number / 10) % 10
             let ones = number % 10
             let result = StringBuilder()
+            if hundreds > 0 then
+                result.Append(hundreds_text[hundreds - 1]) |> ignore
+                if tens > 0 || ones > 0 then
+                    result.Append(" ") |> ignore
             if tens >= 2 then
                 result.Append(tens_text[tens - 2]) |> ignore
                 if ones > 0 then
                     result.Append(" ") |> ignore
             elif tens = 1 then
-                result.Append(larger[number - 3]) |> ignore
+                result.Append(larger[tens * 10 + ones - 3]) |> ignore
 
             if ones > 0 && tens <> 1 then
                 if ones <= 2 then
