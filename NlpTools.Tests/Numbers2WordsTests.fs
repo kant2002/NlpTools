@@ -31,3 +31,8 @@ let values : obj[] seq =
 [<MemberData("values")>]
 let ``Ukrainian`` (number: int64, form: string, gender: Gender, case: string, expected: string) =
     Assert.Equal(expected, (toText "uk" number form gender case))
+
+[<Theory(Skip = "Not working yet")>]
+[<MemberData("values")>]
+let ``Kazakh`` (number: int64, form: string, gender: Gender, case: string, expected: string) =
+    Assert.Equal(expected, (toText "kk" number form gender case))
