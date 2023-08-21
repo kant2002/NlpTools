@@ -6,6 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="NumberTypes.fs" />
+    <Compile Include="NumbersKk.fs" />
+    <Compile Include="NumbersUk.fs" />
     <Compile Include="Library.fs" />
     <Compile Include="Numbers.fs" />
   </ItemGroup>
